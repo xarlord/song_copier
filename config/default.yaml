@@ -1,0 +1,31 @@
+device: auto  # auto, cuda, cpu
+
+paths:
+  cache: cache
+  output: output
+  temp: temp
+  rvc_models: cache/rvc/models
+
+audio:
+  sample_rate: 44100
+  output_format: wav  # wav, mp3, flac
+
+demucs:
+  model: htdemucs_ft  # htdemucs, htdemucs_ft
+  segment: 10         # segment length in seconds (lower = less VRAM)
+  shifts: 1           # number of shifts for better quality
+  overlap: 0.25       # overlap between segments
+
+rvc:
+  f0method: rmvpe     # rmvpe, crepe, harvest
+  f0up_key: 0         # pitch shift in semitones
+  index_rate: 0.5     # feature retrieval rate
+  protect: 0.33       # protect consonants
+
+musicgen:
+  model: facebook/musicgen-melody  # facebook/musicgen-melody, facebook/musicgen-small
+  duration: 15        # output duration in seconds
+  temperature: 1.0    # creativity (0.5 = conservative, 2.0 = wild)
+  cfg_coef: 3.0       # classifier-free guidance
+  top_k: 250
+  top_p: 0.0
