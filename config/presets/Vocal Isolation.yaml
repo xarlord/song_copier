@@ -1,0 +1,52 @@
+name: Vocal Isolation
+description: Isolate vocals with reverb for a vocal-only showcase
+custom: false
+stems:
+  vocals:
+    volume: 1.0
+    effects:
+      eq: {low_gain: -2, mid_gain: 2, high_gain: 3}
+      reverb: {room_size: 0.4, damping: 0.6, wet_level: 0.2}
+      delay: {delay_seconds: 0.15, feedback: 0.2, mix: 0.1}
+      compressor: {threshold_db: -18, ratio: 3, attack_ms: 8}
+      pan: 0
+  drums:
+    volume: 0.1
+    effects:
+      eq: {low_gain: 0, mid_gain: 0, high_gain: 0}
+      reverb: {room_size: 0, damping: 0.5, wet_level: 0}
+      delay: {delay_seconds: 0, feedback: 0, mix: 0}
+      compressor: {threshold_db: 0, ratio: 1, attack_ms: 10}
+      pan: 0
+  bass:
+    volume: 0.1
+    effects:
+      eq: {low_gain: 0, mid_gain: 0, high_gain: 0}
+      reverb: {room_size: 0, damping: 0.5, wet_level: 0}
+      delay: {delay_seconds: 0, feedback: 0, mix: 0}
+      compressor: {threshold_db: 0, ratio: 1, attack_ms: 10}
+      pan: 0
+  guitar:
+    volume: 0.1
+    effects:
+      eq: {low_gain: 0, mid_gain: 0, high_gain: 0}
+      reverb: {room_size: 0, damping: 0.5, wet_level: 0}
+      delay: {delay_seconds: 0, feedback: 0, mix: 0}
+      compressor: {threshold_db: 0, ratio: 1, attack_ms: 10}
+      pan: 0
+  piano:
+    volume: 0.1
+    effects:
+      eq: {low_gain: 0, mid_gain: 0, high_gain: 0}
+      reverb: {room_size: 0, damping: 0.5, wet_level: 0}
+      delay: {delay_seconds: 0, feedback: 0, mix: 0}
+      compressor: {threshold_db: 0, ratio: 1, attack_ms: 10}
+      pan: 0
+  other:
+    volume: 0.1
+    effects:
+      eq: {low_gain: 0, mid_gain: 0, high_gain: 0}
+      reverb: {room_size: 0, damping: 0.5, wet_level: 0}
+      delay: {delay_seconds: 0, feedback: 0, mix: 0}
+      compressor: {threshold_db: 0, ratio: 1, attack_ms: 10}
+      pan: 0

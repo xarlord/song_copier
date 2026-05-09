@@ -1,21 +1,68 @@
-"""Stem Separator tab — separate audio into stems with volume mixer."""
+"""Stem Separator tab — separate audio into stems with volume mixer and effects."""
 
 import gradio as gr
-from pathlib import Path
 from datetime import datetime
 
 from config import load_config
 from pipelines.stem_separator import separate_stems, mix_stems_from_files
+from services.effects import effects_config_from_ui
+from services.presets import list_presets, load_preset
+
+
+STEM_NAMES = ["vocals", "drums", "bass", "guitar", "piano", "other"]
+STEM_LABELS = {
+    "vocals": "🎤 Vocals",
+    "drums": "🥁 Drums",
+    "bass": "🎸 Bass",
+    "guitar": "🎸 Guitar",
+    "piano": "🎹 Piano",
+    "other": "🎻 Other",
+}
+
+
+def _make_effect_sliders():
+    """Create effect slider controls for one stem. Returns dict of slider components."""
+    sliders = {}
+    with gr.Row():
+        sliders["eq_low"] = gr.Slider(-12, 12, value=0, step=0.5, label="EQ Low (200Hz) dB")
+        sliders["eq_mid"] = gr.Slider(-12, 12, value=0, step=0.5, label="EQ Mid (1kHz) dB")
+        sliders["eq_high"] = gr.Slider(-12, 12, value=0, step=0.5, label="EQ High (4kHz) dB")
+    with gr.Row():
+        sliders["rev_room"] = gr.Slider(0, 1, value=0, step=0.05, label="Reverb Size")
+        sliders["rev_damp"] = gr.Slider(0, 1, value=0.5, step=0.05, label="Reverb Damp")
+        sliders["rev_wet"] = gr.Slider(0, 1, value=0, step=0.05, label="Reverb Wet")
+    with gr.Row():
+        sliders["del_sec"] = gr.Slider(0, 1, value=0, step=0.05, label="Delay (sec)")
+        sliders["del_fb"] = gr.Slider(0, 0.9, value=0, step=0.05, label="Delay Feedback")
+        sliders["del_mix"] = gr.Slider(0, 1, value=0, step=0.05, label="Delay Mix")
+    with gr.Row():
+        sliders["comp_thresh"] = gr.Slider(-40, 0, value=0, step=1, label="Compress Thresh dB")
+        sliders["comp_ratio"] = gr.Slider(1, 10, value=1, step=0.5, label="Compress Ratio")
+        sliders["comp_attack"] = gr.Slider(0.1, 50, value=10, step=0.5, label="Compress Attack ms")
+    with gr.Row():
+        sliders["pan"] = gr.Slider(-1, 1, value=0, step=0.05, label="Pan (L ← → R)")
+    return sliders
+
+
+def _collect_effects_from_sliders(sliders_dict: dict) -> list:
+    """Extract slider values in the order expected by effects_config_from_ui."""
+    return [
+        sliders_dict["eq_low"], sliders_dict["eq_mid"], sliders_dict["eq_high"],
+        sliders_dict["rev_room"], sliders_dict["rev_damp"], sliders_dict["rev_wet"],
+        sliders_dict["del_sec"], sliders_dict["del_fb"], sliders_dict["del_mix"],
+        sliders_dict["comp_thresh"], sliders_dict["comp_ratio"], sliders_dict["comp_attack"],
+        sliders_dict["pan"],
+    ]
 
 
 def create_tab() -> gr.Blocks:
     with gr.Blocks() as tab:
         gr.Markdown(
             "## 🎚️ Stem Separator & Mixer\n"
-            "Upload a song to separate it into individual stems, then mix them with volume controls."
+            "Upload a song to separate it into individual stems, then mix them with volume controls and effects."
         )
 
-        # Store state for separated stems
+        # State
         stem_files_state = gr.State(None)
         stems_list_state = gr.State(None)
 
@@ -26,11 +73,7 @@ def create_tab() -> gr.Blocks:
         with gr.Row():
             with gr.Column(scale=1):
                 model_dropdown = gr.Dropdown(
-                    choices=[
-                        "htdemucs_6s",
-                        "htdemucs_ft",
-                        "htdemucs",
-                    ],
+                    choices=["htdemucs_6s", "htdemucs_ft", "htdemucs"],
                     value="htdemucs_6s",
                     label="Model",
                     info="htdemucs_6s = 6 stems (vocals,drums,bass,guitar,piano,other)",
@@ -49,48 +92,69 @@ def create_tab() -> gr.Blocks:
 
         status = gr.Textbox(label="Status", interactive=False, lines=2)
 
-        # === Middle Section: Volume Controls (visible after separation) ===
+        # === Middle Section: Volume + Effects (visible after separation) ===
         mixer_section = gr.Column(visible=False)
 
         with mixer_section:
-            gr.Markdown("### 🎛️ Stem Mixer\nAdjust volumes and preview the mix.")
+            gr.Markdown("### 🎛️ Volume Mixer\nAdjust stem volumes.")
 
-            # Stem volume sliders
+            # Volume sliders
+            volume_sliders = {}
             with gr.Row():
-                vocals_vol = gr.Slider(0.0, 1.0, value=1.0, step=0.05, label="🎤 Vocals")
-                drums_vol = gr.Slider(0.0, 1.0, value=1.0, step=0.05, label="🥁 Drums")
-                bass_vol = gr.Slider(0.0, 1.0, value=1.0, step=0.05, label="🎸 Bass")
-
+                for name in ["vocals", "drums", "bass"]:
+                    volume_sliders[name] = gr.Slider(0, 1.5, value=1, step=0.05, label=STEM_LABELS[name])
             with gr.Row():
-                guitar_vol = gr.Slider(0.0, 1.0, value=1.0, step=0.05, label="🎸 Guitar")
-                piano_vol = gr.Slider(0.0, 1.0, value=1.0, step=0.05, label="🎹 Piano")
-                other_vol = gr.Slider(0.0, 1.0, value=1.0, step=0.05, label="🎻 Other")
+                for name in ["guitar", "piano", "other"]:
+                    volume_sliders[name] = gr.Slider(0, 1.5, value=1, step=0.05, label=STEM_LABELS[name])
 
             with gr.Row():
                 reset_btn = gr.Button("Reset All to 100%", size="sm")
                 mute_all_btn = gr.Button("Mute All", size="sm")
+                reset_fx_btn = gr.Button("Reset All Effects", size="sm")
                 preview_btn = gr.Button("▶️ Preview Mix", variant="primary", size="lg")
+
+            # === Preset Section ===
+            gr.Markdown("### 📋 Presets")
+            preset_names = [p["name"] for p in list_presets()]
+            with gr.Row():
+                preset_dropdown = gr.Dropdown(
+                    choices=preset_names,
+                    label="Load Preset",
+                    info="Apply a preset to all volume and effect sliders",
+                )
+                load_preset_btn = gr.Button("Load Preset", size="sm")
+
+            # === Effects Section ===
+            gr.Markdown("### 🎚️ Effects Rack\nPer-stem audio effects applied during mix.")
+
+            stem_effect_sliders = {}
+            with gr.Accordion("Effects", open=False):
+                for stem_name in STEM_NAMES:
+                    with gr.Accordion(STEM_LABELS[stem_name], open=False):
+                        stem_effect_sliders[stem_name] = _make_effect_sliders()
 
         # === Bottom Section: Outputs ===
         with gr.Row():
             mixed_output = gr.Audio(label="Mixed Preview", type="filepath")
 
         with gr.Accordion("Individual Stems", open=False):
+            stem_audio_outputs = {}
             with gr.Row():
-                vocals_audio = gr.Audio(label="Vocals", type="filepath")
-                drums_audio = gr.Audio(label="Drums", type="filepath")
+                stem_audio_outputs["vocals"] = gr.Audio(label="Vocals", type="filepath")
+                stem_audio_outputs["drums"] = gr.Audio(label="Drums", type="filepath")
             with gr.Row():
-                bass_audio = gr.Audio(label="Bass", type="filepath")
-                guitar_audio = gr.Audio(label="Guitar", type="filepath")
+                stem_audio_outputs["bass"] = gr.Audio(label="Bass", type="filepath")
+                stem_audio_outputs["guitar"] = gr.Audio(label="Guitar", type="filepath")
             with gr.Row():
-                piano_audio = gr.Audio(label="Piano", type="filepath")
-                other_audio = gr.Audio(label="Other", type="filepath")
+                stem_audio_outputs["piano"] = gr.Audio(label="Piano", type="filepath")
+                stem_audio_outputs["other"] = gr.Audio(label="Other", type="filepath")
 
         # === Callbacks ===
 
         def do_separate(audio_path, model_name, fmt, apply_cleaning, progress=gr.Progress()):
             if not audio_path:
-                return "Please upload an audio file.", gr.Column(visible=False), None, None, *[None] * 6
+                return ("Please upload an audio file.", gr.Column(visible=False),
+                        None, None, *[None] * 6)
 
             def on_progress(pct, msg):
                 progress(pct, desc=msg)
@@ -106,38 +170,43 @@ def create_tab() -> gr.Blocks:
 
                 stem_files = result["stem_files"]
                 stems_list = result["stems"]
+                individual = [stem_files.get(s) for s in STEM_NAMES]
 
-                # Get individual file paths
-                vocals = stem_files.get("vocals")
-                drums = stem_files.get("drums")
-                bass = stem_files.get("bass")
-                guitar = stem_files.get("guitar")
-                piano = stem_files.get("piano")
-                other = stem_files.get("other")
-
-                msg = f"Separated into {len(stems_list)} stems: {', '.join(stems_list)}. Adjust volumes and click Preview Mix!"
-                return (
-                    msg,
-                    gr.Column(visible=True),
-                    stem_files,
-                    stems_list,
-                    vocals, drums, bass, guitar, piano, other,
-                )
+                msg = (f"Separated into {len(stems_list)} stems: {', '.join(stems_list)}. "
+                       "Adjust volumes and effects, then click Preview Mix!")
+                return (msg, gr.Column(visible=True),
+                        stem_files, stems_list, *individual)
             except Exception as e:
-                return f"Error: {e}", gr.Column(visible=False), None, None, *[None] * 6
+                return (f"Error: {e}", gr.Column(visible=False),
+                        None, None, *[None] * 6)
 
-        def do_preview(stem_files, v_vol, d_vol, b_vol, g_vol, p_vol, o_vol, progress=gr.Progress()):
+        # Build the full list of inputs for preview: stem_files_state + volume sliders + all effect sliders
+        all_effect_inputs = []
+        for stem_name in STEM_NAMES:
+            all_effect_inputs.extend(_collect_effects_from_sliders(stem_effect_sliders[stem_name]))
+
+        preview_inputs = (
+            [stem_files_state]
+            + [volume_sliders[s] for s in STEM_NAMES]
+            + all_effect_inputs
+        )
+
+        def do_preview(stem_files, v_vol, d_vol, b_vol, g_vol, p_vol, o_vol,
+                       *all_fx_values, progress=gr.Progress()):
             if not stem_files:
                 return None
 
             volumes = {
-                "vocals": v_vol,
-                "drums": d_vol,
-                "bass": b_vol,
-                "guitar": g_vol,
-                "piano": p_vol,
-                "other": o_vol,
+                "vocals": v_vol, "drums": d_vol, "bass": b_vol,
+                "guitar": g_vol, "piano": p_vol, "other": o_vol,
             }
+
+            # Parse effect values: 13 values per stem, 6 stems = 78 values
+            effects = {}
+            fx_per_stem = 13
+            for i, stem_name in enumerate(STEM_NAMES):
+                vals = all_fx_values[i * fx_per_stem:(i + 1) * fx_per_stem]
+                effects[stem_name] = effects_config_from_ui(*vals)
 
             config = load_config()
             output_dir = config["paths"]["output"]
@@ -149,10 +218,13 @@ def create_tab() -> gr.Blocks:
                     stem_files=stem_files,
                     volumes=volumes,
                     output_path=str(output_path),
+                    effects=effects,
                     progress_callback=lambda pct, msg: progress(pct, desc=msg),
                 )
                 return result
             except Exception as e:
+                import logging
+                logging.getLogger(__name__).error(f"Preview mix error: {e}", exc_info=True)
                 return None
 
         def reset_volumes():
@@ -161,37 +233,74 @@ def create_tab() -> gr.Blocks:
         def mute_all():
             return [0.0] * 6
 
+        def reset_effects():
+            # 13 zeros/defaults per stem, 6 stems
+            defaults = []
+            for _ in STEM_NAMES:
+                defaults.extend([0, 0, 0,       # EQ
+                                 0, 0.5, 0,     # Reverb (damping stays 0.5)
+                                 0, 0, 0,       # Delay
+                                 0, 1, 10,      # Compressor (ratio=1 = bypass)
+                                 0])             # Pan
+            return defaults
+
+        def do_load_preset(preset_name):
+            """Load preset and return volume + effect slider values."""
+            if not preset_name:
+                return reset_volumes() + reset_effects()
+
+            data = load_preset(preset_name)
+            if not data:
+                return reset_volumes() + reset_effects()
+
+            # Extract volumes per stem
+            volumes = []
+            for stem in STEM_NAMES:
+                stem_data = data.get("stems", {}).get(stem, {})
+                volumes.append(stem_data.get("volume", 1.0))
+
+            # Extract effects per stem
+            fx_values = []
+            for stem in STEM_NAMES:
+                stem_data = data.get("stems", {}).get(stem, {})
+                fx = stem_data.get("effects", {})
+                eq = fx.get("eq", {})
+                rev = fx.get("reverb", {})
+                dly = fx.get("delay", {})
+                comp = fx.get("compressor", {})
+                fx_values.extend([
+                    eq.get("low_gain", 0), eq.get("mid_gain", 0), eq.get("high_gain", 0),
+                    rev.get("room_size", 0), rev.get("damping", 0.5), rev.get("wet_level", 0),
+                    dly.get("delay_seconds", 0), dly.get("feedback", 0), dly.get("mix", 0),
+                    comp.get("threshold_db", 0), comp.get("ratio", 1), comp.get("attack_ms", 10),
+                    fx.get("pan", 0),
+                ])
+
+            return volumes + fx_values
+
+        # Wire up callbacks
         separate_btn.click(
             fn=do_separate,
             inputs=[input_audio, model_dropdown, format_dropdown, clean_checkbox],
             outputs=[
-                status,
-                mixer_section,
-                stem_files_state,
-                stems_list_state,
-                vocals_audio, drums_audio, bass_audio,
-                guitar_audio, piano_audio, other_audio,
+                status, mixer_section, stem_files_state, stems_list_state,
+                *[stem_audio_outputs[s] for s in STEM_NAMES],
             ],
         )
 
-        preview_btn.click(
-            fn=do_preview,
-            inputs=[
-                stem_files_state,
-                vocals_vol, drums_vol, bass_vol,
-                guitar_vol, piano_vol, other_vol,
-            ],
-            outputs=[mixed_output],
-        )
+        preview_btn.click(fn=do_preview, inputs=preview_inputs, outputs=[mixed_output])
 
-        reset_btn.click(
-            fn=reset_volumes,
-            outputs=[vocals_vol, drums_vol, bass_vol, guitar_vol, piano_vol, other_vol],
-        )
+        reset_btn.click(fn=reset_volumes, outputs=[volume_sliders[s] for s in STEM_NAMES])
+        mute_all_btn.click(fn=mute_all, outputs=[volume_sliders[s] for s in STEM_NAMES])
 
-        mute_all_btn.click(
-            fn=mute_all,
-            outputs=[vocals_vol, drums_vol, bass_vol, guitar_vol, piano_vol, other_vol],
-        )
+        # Collect all effect slider outputs for reset
+        all_fx_outputs = []
+        for stem_name in STEM_NAMES:
+            all_fx_outputs.extend(_collect_effects_from_sliders(stem_effect_sliders[stem_name]))
+        reset_fx_btn.click(fn=reset_effects, outputs=all_fx_outputs)
+
+        # Load preset: updates all volume sliders + all effect sliders
+        all_preset_outputs = [volume_sliders[s] for s in STEM_NAMES] + all_fx_outputs
+        load_preset_btn.click(fn=do_load_preset, inputs=[preset_dropdown], outputs=all_preset_outputs)
 
     return tab

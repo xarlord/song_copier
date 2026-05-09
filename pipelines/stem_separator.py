@@ -96,14 +96,25 @@ def mix_stems_from_files(
     volumes: dict[str, float],
     output_path: str,
     output_format: str = "wav",
+    effects: dict[str, dict] | None = None,
     progress_callback=None,
 ) -> str:
-    """Load stem files, mix with volumes, and save result.
+    """Load stem files, apply effects, mix with volumes, and save result.
+
+    Args:
+        stem_files: dict mapping stem name to file path
+        volumes: dict mapping stem name to volume 0.0-1.0
+        output_path: where to save the mixed file
+        output_format: wav, mp3, flac
+        effects: dict mapping stem name to effects_config dict.
+            If None, no effects are applied.
+        progress_callback: optional callback(pct, msg)
 
     Returns:
         Path to mixed audio file.
     """
     from services.audio_io import load_audio
+    from services.effects import apply_effects
 
     if progress_callback:
         progress_callback(0.0, "Loading stems...")
@@ -117,7 +128,17 @@ def mix_stems_from_files(
         stems[name] = audio
 
     if progress_callback:
-        progress_callback(0.5, "Mixing...")
+        progress_callback(0.3, "Applying effects...")
+
+    # Apply per-stem effects
+    if effects:
+        for name, audio in stems.items():
+            stem_effects = effects.get(name)
+            if stem_effects:
+                stems[name] = apply_effects(audio, sr, stem_effects)
+
+    if progress_callback:
+        progress_callback(0.6, "Mixing...")
 
     mixed = mix_stems_with_volumes(stems, volumes, normalize=True)
 

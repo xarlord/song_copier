@@ -1,0 +1,52 @@
+name: Live Feel
+description: Wide stereo with reverb and delay for a live concert sound
+custom: false
+stems:
+  vocals:
+    volume: 1.0
+    effects:
+      eq: {low_gain: 0, mid_gain: 1, high_gain: 2}
+      reverb: {room_size: 0.5, damping: 0.4, wet_level: 0.25}
+      delay: {delay_seconds: 0.2, feedback: 0.3, mix: 0.15}
+      compressor: {threshold_db: -15, ratio: 3, attack_ms: 8}
+      pan: 0
+  drums:
+    volume: 1.0
+    effects:
+      eq: {low_gain: 1, mid_gain: 0, high_gain: 1}
+      reverb: {room_size: 0.4, damping: 0.5, wet_level: 0.2}
+      delay: {delay_seconds: 0, feedback: 0, mix: 0}
+      compressor: {threshold_db: -10, ratio: 2, attack_ms: 5}
+      pan: 0
+  bass:
+    volume: 1.0
+    effects:
+      eq: {low_gain: 2, mid_gain: 0, high_gain: -1}
+      reverb: {room_size: 0.1, damping: 0.7, wet_level: 0.05}
+      delay: {delay_seconds: 0, feedback: 0, mix: 0}
+      compressor: {threshold_db: -12, ratio: 3, attack_ms: 15}
+      pan: 0
+  guitar:
+    volume: 1.0
+    effects:
+      eq: {low_gain: -1, mid_gain: 1, high_gain: 2}
+      reverb: {room_size: 0.35, damping: 0.5, wet_level: 0.2}
+      delay: {delay_seconds: 0.3, feedback: 0.25, mix: 0.1}
+      compressor: {threshold_db: 0, ratio: 1, attack_ms: 10}
+      pan: -0.4
+  piano:
+    volume: 1.0
+    effects:
+      eq: {low_gain: 0, mid_gain: 1, high_gain: 1}
+      reverb: {room_size: 0.4, damping: 0.5, wet_level: 0.2}
+      delay: {delay_seconds: 0, feedback: 0, mix: 0}
+      compressor: {threshold_db: 0, ratio: 1, attack_ms: 10}
+      pan: 0.4
+  other:
+    volume: 0.8
+    effects:
+      eq: {low_gain: 0, mid_gain: 0, high_gain: 0}
+      reverb: {room_size: 0.3, damping: 0.5, wet_level: 0.15}
+      delay: {delay_seconds: 0, feedback: 0, mix: 0}
+      compressor: {threshold_db: 0, ratio: 1, attack_ms: 10}
+      pan: 0

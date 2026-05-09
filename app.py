@@ -17,6 +17,7 @@ from ui.styles import CUSTOM_CSS
 from ui.tabs.instrumental_tab import create_tab as create_instrumental_tab
 from ui.tabs.voice_swap_tab import create_tab as create_voice_swap_tab
 from ui.tabs.spinoff_tab import create_tab as create_spinoff_tab
+from ui.tabs.batch_tab import create_tab as create_batch_tab
 
 
 def create_app() -> gr.Blocks:
@@ -42,6 +43,8 @@ def create_app() -> gr.Blocks:
                 create_voice_swap_tab()
             with gr.Tab("Song Spin-off"):
                 create_spinoff_tab()
+            with gr.Tab("Batch Process"):
+                create_batch_tab()
 
     return app
 

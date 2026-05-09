@@ -1,0 +1,52 @@
+name: Karaoke
+description: Remove vocals, add slight reverb on drums for live feel
+custom: false
+stems:
+  vocals:
+    volume: 0.0
+    effects:
+      eq: {low_gain: 0, mid_gain: 0, high_gain: 0}
+      reverb: {room_size: 0, damping: 0.5, wet_level: 0}
+      delay: {delay_seconds: 0, feedback: 0, mix: 0}
+      compressor: {threshold_db: 0, ratio: 1, attack_ms: 10}
+      pan: 0
+  drums:
+    volume: 1.0
+    effects:
+      eq: {low_gain: 0, mid_gain: 0, high_gain: 0}
+      reverb: {room_size: 0.3, damping: 0.5, wet_level: 0.15}
+      delay: {delay_seconds: 0, feedback: 0, mix: 0}
+      compressor: {threshold_db: 0, ratio: 1, attack_ms: 10}
+      pan: 0
+  bass:
+    volume: 1.0
+    effects:
+      eq: {low_gain: 0, mid_gain: 0, high_gain: 0}
+      reverb: {room_size: 0, damping: 0.5, wet_level: 0}
+      delay: {delay_seconds: 0, feedback: 0, mix: 0}
+      compressor: {threshold_db: 0, ratio: 1, attack_ms: 10}
+      pan: 0
+  guitar:
+    volume: 1.0
+    effects:
+      eq: {low_gain: 0, mid_gain: 0, high_gain: 0}
+      reverb: {room_size: 0, damping: 0.5, wet_level: 0}
+      delay: {delay_seconds: 0, feedback: 0, mix: 0}
+      compressor: {threshold_db: 0, ratio: 1, attack_ms: 10}
+      pan: 0
+  piano:
+    volume: 1.0
+    effects:
+      eq: {low_gain: 0, mid_gain: 0, high_gain: 0}
+      reverb: {room_size: 0, damping: 0.5, wet_level: 0}
+      delay: {delay_seconds: 0, feedback: 0, mix: 0}
+      compressor: {threshold_db: 0, ratio: 1, attack_ms: 10}
+      pan: 0
+  other:
+    volume: 1.0
+    effects:
+      eq: {low_gain: 0, mid_gain: 0, high_gain: 0}
+      reverb: {room_size: 0, damping: 0.5, wet_level: 0}
+      delay: {delay_seconds: 0, feedback: 0, mix: 0}
+      compressor: {threshold_db: 0, ratio: 1, attack_ms: 10}
+      pan: 0
