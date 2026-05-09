@@ -11,7 +11,7 @@ audio:
   output_format: wav  # wav, mp3, flac
 
 demucs:
-  model: htdemucs_ft  # htdemucs, htdemucs_ft
+  model: htdemucs_6s  # htdemucs, htdemucs_ft, htdemucs_6s (6 stems: drums,bass,other,vocals,guitar,piano)
   segment: 10         # segment length in seconds (lower = less VRAM)
   shifts: 1           # number of shifts for better quality
   overlap: 0.25       # overlap between segments

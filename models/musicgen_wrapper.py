@@ -41,11 +41,32 @@ class MusicGenWrapper(BaseModelWrapper):
     def load_model(self) -> None:
         if self._loaded:
             return
+
+        # Install a minimal xformers stub so audiocraft can import without
+        # the real xformers package (which is incompatible with torch 2.7+).
+        import sys
+        import types
+
+        if 'xformers' not in sys.modules:
+            xf = types.ModuleType('xformers')
+            xf_ops = types.ModuleType('xformers.ops')
+            xf.ops = xf_ops
+            import torch
+            xf_ops.memory_efficient_attention = lambda *a, **kw: None
+            xf_ops.unbind = torch.unbind
+            xf_ops.LowerTriangularMask = type('LowerTriangularMask', (), {})
+            sys.modules['xformers'] = xf
+            sys.modules['xformers.ops'] = xf_ops
+
+        # Now import and patch the verification to skip the xformers check
+        from audiocraft.modules import transformer as _tf
+        _tf._verify_xformers_memory_efficient_compat = lambda: None
+        _tf._verify_xformers_internal_compat = lambda: None
+
         from audiocraft.models import MusicGen
 
         logger.info(f"Loading MusicGen model: {self.model_name}")
         self.model = MusicGen.get_pretrained(self.model_name)
-        self.model.to(self.device)
         self._set_params()
         self._loaded = True
         logger.info(f"MusicGen {self.model_name} loaded")

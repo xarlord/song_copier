@@ -36,7 +36,7 @@ def create_app() -> gr.Blocks:
         )
 
         with gr.Tabs():
-            with gr.Tab("Vocal Remover"):
+            with gr.Tab("Stem Separator"):
                 create_instrumental_tab()
             with gr.Tab("Voice Swap"):
                 create_voice_swap_tab()

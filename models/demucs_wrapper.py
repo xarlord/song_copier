@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 VRAM_ESTIMATES = {
     "htdemucs": 3000,
     "htdemucs_ft": 5000,
+    "htdemucs_6s": 6000,
     "mdx": 2000,
 }
 
@@ -30,7 +31,7 @@ class DemucsWrapper(BaseModelWrapper):
         device: str = "cuda",
         cache_dir: str | Path = "cache",
         segment: float = 10,
-        shifts: int = 1,
+        shifts: int = 5,  # Average 5 shifts for better quality (removes artifacts)
         overlap: float = 0.25,
     ):
         super().__init__(model_name, device, cache_dir)
