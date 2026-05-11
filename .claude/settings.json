@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "mcp__MCP_DOCKER__resolve-library-id"
+      "mcp__MCP_DOCKER__resolve-library-id",
+      "mcp__stitch__create_project"
     ]
-  }
+  },
+  "enableAllProjectMcpServers": true
 }

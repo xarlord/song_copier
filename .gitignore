@@ -28,5 +28,9 @@ temp/
 output/
 *.log
 
+# RVC isolated env (Python 3.10)
+rvc_env/
+
 # Claude
-.claude/settings.local.json
+.claude/
+.mcp.json

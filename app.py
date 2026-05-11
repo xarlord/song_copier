@@ -8,11 +8,12 @@ import sys
 
 import gradio as gr
 
-# Add project root to path
 sys.path.insert(0, ".")
 
 from utils.logging import setup_logging
 from utils.gpu import get_device, get_vram_info
+from services.cleanup import run_startup_cleanup
+from config import load_config
 from ui.styles import CUSTOM_CSS
 from ui.tabs.instrumental_tab import create_tab as create_instrumental_tab
 from ui.tabs.voice_swap_tab import create_tab as create_voice_swap_tab
@@ -20,21 +21,43 @@ from ui.tabs.spinoff_tab import create_tab as create_spinoff_tab
 from ui.tabs.batch_tab import create_tab as create_batch_tab
 
 
+CUSTOM_THEME = gr.themes.Soft(
+    primary_hue=gr.themes.colors.purple,
+    secondary_hue=gr.themes.colors.blue,
+    neutral_hue=gr.themes.colors.slate,
+    font=gr.themes.GoogleFont("Inter"),
+).set(
+    body_background_fill="#0f0f1a",
+    body_background_fill_dark="#0f0f1a",
+    button_primary_background_fill="linear-gradient(135deg, #533483, #0f3460)",
+    button_primary_background_fill_hover="linear-gradient(135deg, #6b44a8, #1a4a80)",
+    button_primary_text_color="white",
+    block_background_fill="#16162a",
+    block_background_fill_dark="#16162a",
+    block_border_color="rgba(255,255,255,0.06)",
+    block_title_text_color="#b8b8d0",
+    input_background_fill="#1a1a30",
+    input_border_color="rgba(255,255,255,0.08)",
+    accordion_text_color="#c0c0d8",
+    accordion_text_color_dark="#c0c0d8",
+)
+
+
 def create_app() -> gr.Blocks:
     device = get_device()
     vram = get_vram_info()
 
-    with gr.Blocks(
-        title="Audio Generator Studio",
-        css=CUSTOM_CSS,
-        theme=gr.themes.Soft(),
-    ) as app:
-        gr.Markdown(
-            "# 🎵 Audio Generator Studio\n"
-            "Local AI-powered audio manipulation. All processing runs on your machine.\n\n"
-            f"**Device:** {vram.get('device', device)} | "
-            f"**VRAM:** {vram.get('total_mb', 'N/A')} MB"
-        )
+    with gr.Blocks(title="Audio Generator Studio") as app:
+        with gr.Column(elem_classes=["app-header"]):
+            gr.Markdown(
+                "# Audio Generator Studio\n"
+                "Local AI-powered audio manipulation. All processing runs on your GPU."
+            )
+            gr.Markdown(
+                f"**Device:** {vram.get('device', device)} | "
+                f"**VRAM:** {vram.get('total_mb', 'N/A')} MB",
+                elem_classes=["device-info"],
+            )
 
         with gr.Tabs():
             with gr.Tab("Stem Separator"):
@@ -58,9 +81,15 @@ if __name__ == "__main__":
 
     setup_logging("DEBUG" if args.debug else "INFO")
 
+    # Clean up old temp/output files at startup
+    config = load_config()
+    run_startup_cleanup(config)
+
     app = create_app()
     app.launch(
         share=args.share,
         server_port=args.port,
         inbrowser=True,
+        css=CUSTOM_CSS,
+        theme=CUSTOM_THEME,
     )

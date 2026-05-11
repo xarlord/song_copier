@@ -29,3 +29,7 @@ musicgen:
   cfg_coef: 3.0       # classifier-free guidance
   top_k: 250
   top_p: 0.0
+
+cleanup:
+  temp_max_age_hours: 24   # auto-delete temp files older than this
+  max_output_files: 50     # keep at most N files in output dir
