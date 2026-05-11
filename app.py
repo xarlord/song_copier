@@ -19,6 +19,9 @@ from ui.tabs.instrumental_tab import create_tab as create_instrumental_tab
 from ui.tabs.voice_swap_tab import create_tab as create_voice_swap_tab
 from ui.tabs.spinoff_tab import create_tab as create_spinoff_tab
 from ui.tabs.batch_tab import create_tab as create_batch_tab
+from ui.tabs.mastering_tab import create_tab as create_mastering_tab
+from ui.tabs.visualization_tab import create_tab as create_visualization_tab
+from ui.tabs.recording_tab import create_tab as create_recording_tab
 
 
 CUSTOM_THEME = gr.themes.Soft(
@@ -60,12 +63,18 @@ def create_app() -> gr.Blocks:
             )
 
         with gr.Tabs():
+            with gr.Tab("🎙️ Record"):
+                create_recording_tab()
             with gr.Tab("Stem Separator"):
                 create_instrumental_tab()
             with gr.Tab("Voice Swap"):
                 create_voice_swap_tab()
             with gr.Tab("Song Spin-off"):
                 create_spinoff_tab()
+            with gr.Tab("🎛️ Mastering"):
+                create_mastering_tab()
+            with gr.Tab("📊 Visualize"):
+                create_visualization_tab()
             with gr.Tab("Batch Process"):
                 create_batch_tab()
 
