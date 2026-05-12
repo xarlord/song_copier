@@ -52,6 +52,12 @@ def main():
         if action == "convert":
             from rvc_python.infer import RVCInference
 
+            # Validate required keys
+            for key in ("model_path", "input_path", "output_path"):
+                if key not in config:
+                    json.dump({"success": False, "error": f"Missing required key: {key}"}, sys.stdout)
+                    return
+
             device = config.get("device", "cuda:0")
             if device == "cpu":
                 device = "cpu:0"
@@ -83,6 +89,9 @@ def main():
 
         elif action == "list_models":
             from pathlib import Path
+            if "models_dir" not in config:
+                json.dump({"success": False, "error": "Missing required key: models_dir"}, sys.stdout)
+                return
             models_dir = Path(config["models_dir"])
             models = []
             for p in models_dir.glob("**/*.pth"):

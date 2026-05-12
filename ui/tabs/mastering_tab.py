@@ -140,7 +140,7 @@ def create_tab() -> gr.Blocks:
 
         def toggle_custom_lufs(preset: str):
             """Show the custom LUFS slider only when preset is 'custom'."""
-            return gr.Slider(visible=(preset == "custom"))
+            return gr.update(visible=(preset == "custom"))
 
         preset_dropdown.change(
             fn=toggle_custom_lufs,

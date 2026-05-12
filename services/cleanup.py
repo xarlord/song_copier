@@ -7,7 +7,6 @@ Called at app startup and optionally on a schedule.
 import logging
 import time
 from pathlib import Path
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 

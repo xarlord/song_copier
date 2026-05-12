@@ -1,7 +1,6 @@
 """Stem post-processing for artifact reduction and quality enhancement."""
 
 import logging
-from typing import Literal
 
 import numpy as np
 

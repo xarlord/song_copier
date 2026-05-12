@@ -12,7 +12,7 @@ def load_config(config_path: str | None = None) -> dict:
     path = Path(config_path) if config_path else ROOT_DIR / "config" / "default.yaml"
     if path.exists():
         with open(path) as f:
-            cfg = yaml.safe_load(f)
+            cfg = yaml.safe_load(f) or {}
     else:
         cfg = {}
 
@@ -24,9 +24,8 @@ def load_config(config_path: str | None = None) -> dict:
                 cfg["paths"][key] = ROOT_DIR / p
 
     # Ensure output directories exist
-    for key in ("cache", "output", "temp"):
-        dir_key = key if key != "rvc_models" else key
-        dir_path = cfg.get("paths", {}).get(dir_key if key != "rvc_models" else "rvc_models", ROOT_DIR / key)
+    for key in ("cache", "output", "temp", "rvc_models"):
+        dir_path = cfg.get("paths", {}).get(key, ROOT_DIR / key)
         Path(dir_path).mkdir(parents=True, exist_ok=True)
 
     return cfg

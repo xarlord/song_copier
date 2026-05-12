@@ -8,7 +8,7 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-PROJECTS_DIR = Path("projects")
+PROJECTS_DIR = Path(__file__).resolve().parent.parent / "projects"
 
 
 def _ensure_projects_dir() -> Path:

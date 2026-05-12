@@ -28,6 +28,12 @@ temp/
 output/
 *.log
 
+# Projects
+projects/
+
+# Environment
+.env
+
 # RVC isolated env (Python 3.10)
 rvc_env/
 

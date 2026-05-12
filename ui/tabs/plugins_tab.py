@@ -187,7 +187,13 @@ def _run_plugin(
 
     # Save
     try:
-        out_path = save_audio(result, sr)
+        from config import load_config
+        from datetime import datetime
+        config = load_config()
+        output_dir = config["paths"]["output"]
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        out_path = output_dir / f"plugin_{plugin_name}_{timestamp}.wav"
+        out_path = save_audio(result, out_path, sr)
     except Exception as exc:
         return None, f"❌ Save error: {exc}"
 

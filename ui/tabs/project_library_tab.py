@@ -339,10 +339,9 @@ def create_tab() -> gr.Column:
             outputs=[reload_status],
         )
 
-        # Load initial data on tab creation
-        tab.load(
-            fn=do_refresh,
-            outputs=[project_df, status_msg, detail_section, selected_project_name],
-        )
+        # Populate initial data
+        _initial_projects = list_projects()
+        _initial_rows = _projects_to_rows(_initial_projects)
+        project_df.value = _initial_rows
 
     return tab

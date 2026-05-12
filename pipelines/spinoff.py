@@ -121,6 +121,7 @@ def generate_spinoff(
 
     # Step 5: Optionally mix with original stems
     if mix_with_original_stems:
+        import numpy as np
         import torch
         import torchaudio
 

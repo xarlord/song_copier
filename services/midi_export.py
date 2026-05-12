@@ -117,6 +117,7 @@ def audio_to_midi(
     sr: int,
     instrument: str = "auto",
     min_note_duration: float = 0.05,
+    pitch_data: tuple[np.ndarray, np.ndarray] | None = None,
 ) -> "mido.MidiFile":
     """Convert audio to MIDI using fundamental frequency detection.
 
@@ -131,14 +132,19 @@ def audio_to_midi(
             One of: 'auto', 'piano', 'guitar', 'bass', 'drums', 'vocals'.
         min_note_duration: Minimum note duration in seconds. Notes shorter
             than this are merged with the previous note or discarded.
+        pitch_data: Optional pre-computed (times, frequencies) tuple from
+            detect_pitch(). If provided, skips redundant pitch detection.
 
     Returns:
         A mido.MidiFile object containing the transcription.
     """
     import mido
 
-    # Detect pitch
-    times, frequencies = detect_pitch(audio, sr)
+    # Detect pitch (or use pre-computed results)
+    if pitch_data is not None:
+        times, frequencies = pitch_data
+    else:
+        times, frequencies = detect_pitch(audio, sr)
 
     # Quantize frequencies to MIDI notes
     midi_notes = np.array([freq_to_midi_note(f) if not np.isnan(f) else 0 for f in frequencies])
@@ -292,8 +298,11 @@ def export_midi(
 
     logger.info(f"Exporting MIDI: {output_path} (BPM={bpm}, instrument={instrument})")
 
-    # Generate MIDI
-    mid = audio_to_midi(audio, sr, instrument=instrument)
+    # Detect pitch once and reuse results
+    pitch_data = detect_pitch(audio, sr)
+
+    # Generate MIDI with pre-computed pitch data
+    mid = audio_to_midi(audio, sr, instrument=instrument, pitch_data=pitch_data)
 
     # Update tempo to requested BPM
     tempo_msg = None
@@ -309,12 +318,12 @@ def export_midi(
         tempo_msg.tempo = mido.bpm2tempo(bpm)
 
     # Recalculate timing with the correct BPM
-    # Rebuild the MIDI file with proper tempo
+    # Rebuild the MIDI file with proper tempo using the already-detected pitch data
     ticks_per_beat = mid.ticks_per_beat
     microseconds_per_beat = mido.bpm2tempo(bpm)
 
-    # Re-detect pitch and build with correct tempo
-    times, frequencies = detect_pitch(audio, sr)
+    # Reuse the pitch data already detected above
+    times, frequencies = pitch_data
     midi_notes = np.array([freq_to_midi_note(f) if not np.isnan(f) else 0 for f in frequencies])
 
     # Build note events

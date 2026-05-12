@@ -280,15 +280,15 @@ def create_tab() -> gr.Blocks:
                 stem_files = result["stem_files"]
                 stems_list = result["stems"]
 
-                # Load stems into memory for analysis
-                from services.audio_io import load_audio
-                stems_data: dict[str, np.ndarray] = {}
+                # Store only file paths (JSON-serializable) instead of numpy arrays
+                stems_paths: dict[str, str] = {}
                 sr_val = 44100
                 for s_name in STEM_NAMES:
                     if s_name in stem_files:
-                        audio_arr, loaded_sr = load_audio(stem_files[s_name])
-                        stems_data[s_name] = audio_arr
-                        sr_val = loaded_sr
+                        stems_paths[s_name] = str(stem_files[s_name])
+                        # Read SR from one file
+                        from services.audio_io import load_audio as _load
+                        _, sr_val = _load(stem_files[s_name])
 
                 individual = [stem_files.get(s) for s in STEM_NAMES]
                 msg = (
@@ -297,7 +297,7 @@ def create_tab() -> gr.Blocks:
                 )
                 return (
                     msg, gr.Column(visible=True),
-                    stem_files, stems_data, sr_val, None,
+                    stem_files, stems_paths, sr_val, None,
                     *individual,
                 )
             except Exception as e:
@@ -319,12 +319,19 @@ def create_tab() -> gr.Blocks:
         )
 
         # ---- Analyze ----
-        def do_analyze(stems_data, sr, progress=gr.Progress()):
-            if not stems_data or not sr:
+        def do_analyze(stems_paths, sr, progress=gr.Progress()):
+            if not stems_paths or not sr:
                 return "⚠️ Separate stems first.", gr.Textbox(visible=False), None, []
 
             progress(0.3, desc="Analyzing stems…")
             try:
+                # Load stems from file paths
+                from services.audio_io import load_audio as _load
+                stems_data: dict[str, np.ndarray] = {}
+                for s_name, fpath in stems_paths.items():
+                    audio_arr, _ = _load(fpath)
+                    stems_data[s_name] = audio_arr
+
                 suggestions = suggest_mix(stems_data, sr)
                 report = _format_suggestions(suggestions)
                 slider_values = _suggestion_to_slider_values(suggestions)
@@ -358,12 +365,19 @@ def create_tab() -> gr.Blocks:
         )
 
         # ---- Apply Mix ----
-        def do_apply(stems_data, sr, *slider_vals, progress=gr.Progress()):
-            if not stems_data or not sr:
+        def do_apply(stems_paths, sr, *slider_vals, progress=gr.Progress()):
+            if not stems_paths or not sr:
                 return None, "⚠️ Separate and analyze stems first."
 
             progress(0.2, desc="Applying mix settings…")
             try:
+                # Load stems from file paths
+                from services.audio_io import load_audio as _load
+                stems_data: dict[str, np.ndarray] = {}
+                for s_name, fpath in stems_paths.items():
+                    audio_arr, _ = _load(fpath)
+                    stems_data[s_name] = audio_arr
+
                 # Reconstruct suggestions from slider values
                 slider_per_stem = 10
                 user_suggestions: dict[str, dict] = {}

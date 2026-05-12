@@ -79,7 +79,7 @@ EXPOSE 7860
 
 # Health check — verify the Gradio server is responding
 HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
-    CMD curl -f http://localhost:7860/ || exit 1
+    CMD curl -fL http://localhost:7860/ || exit 1
 
 # Entrypoint
-CMD ["python", "app.py", "--port", "7860", "--share"]
+CMD ["python", "app.py", "--port", "7860"]

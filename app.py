@@ -55,7 +55,7 @@ def create_app() -> gr.Blocks:
     device = get_device()
     vram = get_vram_info()
 
-    with gr.Blocks(title="Audio Generator Studio") as app:
+    with gr.Blocks(title="Audio Generator Studio", theme=CUSTOM_THEME, css=CUSTOM_CSS) as app:
         with gr.Column(elem_classes=["app-header"]):
             gr.Markdown(
                 "# Audio Generator Studio\n"
@@ -114,6 +114,4 @@ if __name__ == "__main__":
         share=args.share,
         server_port=args.port,
         inbrowser=True,
-        css=CUSTOM_CSS,
-        theme=CUSTOM_THEME,
     )

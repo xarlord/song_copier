@@ -57,7 +57,8 @@ def plot_waveform(audio: np.ndarray, sr: int, title: str = "Waveform") -> np.nda
     """
     fig, ax, plt = _setup_figure(figsize=(10, 3))
 
-    time = np.linspace(0, len(audio) / sr, num=len(audio), endpoint=False)
+    n_samples = audio.shape[-1]
+    time = np.linspace(0, n_samples / sr, num=n_samples, endpoint=False)
 
     if audio.ndim == 1:
         ax.plot(time, audio, color=_WAVEFORM_COLOR_L, linewidth=0.6)

@@ -1,0 +1,170 @@
+name: CI - Lint & Import Check
+
+on:
+  push:
+    branches: [master, main, instrument-seperation]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 pyyaml
+
+      - name: Syntax check all Python files
+        run: |
+          python -c "
+          import py_compile, os, sys
+          errors = []
+          for root, dirs, files in os.walk('.'):
+              skip = ['venv', 'rvc_env', '__pycache__', '.git', 'node_modules', '.claude']
+              dirs[:] = [d for d in dirs if d not in skip]
+              for f in files:
+                  if f.endswith('.py'):
+                      path = os.path.join(root, f)
+                      try:
+                          py_compile.compile(path, doraise=True)
+                      except py_compile.PyCompileError as e:
+                          errors.append(str(e))
+                          print(f'FAIL: {path}')
+          if errors:
+              for e in errors:
+                  print(e)
+              sys.exit(1)
+          print('All Python files pass syntax check.')
+          "
+
+      - name: Flake8 critical errors
+        run: |
+          # Only check for critical errors, not style
+          flake8 . \
+            --exclude=venv,rvc_env,__pycache__,.git,.claude \
+            --select=E9,F63,F7,F82 \
+            --show-source \
+            --statistics
+
+  import-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install core dependencies (no GPU)
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml numpy scipy matplotlib gradio pedalboard librosa soundfile pydub mido noisereduce
+
+      - name: Check all services import cleanly
+        run: |
+          python -c "
+          import sys, importlib
+          sys.path.insert(0, '.')
+
+          # Services that should import without GPU/ML deps
+          services = [
+              'services.audio_io',
+              'services.mixing',
+              'services.stem_cleaning',
+              'services.effects',
+              'services.presets',
+              'services.mastering',
+              'services.visualization',
+              'services.midi_export',
+              'services.time_stretch',
+              'services.ai_mixer',
+              'services.project_manager',
+              'services.plugin_manager',
+              'services.cleanup',
+              'services.rvc_bridge',
+              'config',
+          ]
+
+          errors = []
+          for mod in services:
+              try:
+                  importlib.import_module(mod)
+                  print(f'  OK {mod}')
+              except Exception as e:
+                  errors.append(f'{mod}: {e}')
+                  print(f'  FAIL {mod}: {e}')
+
+          if errors:
+              print(f'\n{len(errors)} import failures')
+              sys.exit(1)
+          print(f'\nAll {len(services)} services import successfully.')
+          "
+
+  config-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate config
+        run: |
+          python -c "
+          import yaml, json
+          # Check default.yaml is valid YAML
+          with open('config/default.yaml') as f:
+              cfg = yaml.safe_load(f)
+          assert 'device' in cfg, 'Missing device key'
+          assert 'paths' in cfg, 'Missing paths key'
+          assert 'demucs' in cfg, 'Missing demucs key'
+          assert 'rvc' in cfg, 'Missing rvc key'
+          assert 'musicgen' in cfg, 'Missing musicgen key'
+          assert 'cleanup' in cfg, 'Missing cleanup key'
+          print('config/default.yaml: valid')
+
+          # Check plugin manifests
+          import os
+          for root, dirs, files in os.walk('plugins'):
+              for f in files:
+                  if f == 'plugin.json':
+                      path = os.path.join(root, f)
+                      with open(path) as pf:
+                          manifest = json.load(pf)
+                      assert 'name' in manifest, f'{path}: missing name'
+                      assert 'version' in manifest, f'{path}: missing version'
+                      print(f'{path}: valid')
+          print('All configs valid.')
+          "
+
+      - name: Validate Dockerfile
+        run: |
+          # Basic Dockerfile structure check
+          grep -q 'FROM' Dockerfile
+          grep -q 'EXPOSE' Dockerfile
+          grep -q 'HEALTHCHECK' Dockerfile
+          grep -q 'CMD' Dockerfile
+          echo "Dockerfile structure OK"
+
+      - name: Validate requirements.txt
+        run: |
+          # Check no torch/torchaudio in requirements (installed separately)
+          if grep -q '^torch' requirements.txt; then
+              echo "ERROR: torch should not be in requirements.txt (installed with CUDA index separately)"
+              exit 1
+          fi
+          if grep -q '^torchaudio' requirements.txt; then
+              echo "ERROR: torchaudio should not be in requirements.txt"
+              exit 1
+          fi
+          if grep -q 'rvc-python' requirements.txt; then
+              echo "ERROR: rvc-python should not be in requirements.txt (runs in separate venv)"
+              exit 1
+          fi
+          echo "requirements.txt OK"

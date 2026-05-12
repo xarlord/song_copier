@@ -51,6 +51,7 @@ def swap_vocals(
 
     register_model("demucs", demucs)
     demucs.load_model()
+    demucs_loaded = True
 
     try:
         if progress_callback:
@@ -59,6 +60,7 @@ def swap_vocals(
         stems, sr = demucs.separate(input_path)
         demucs.unload_model()
         unregister_model("demucs")
+        demucs_loaded = False
 
         if progress_callback:
             progress_callback(0.4, "Extracting vocals...")
@@ -123,6 +125,13 @@ def swap_vocals(
             format=output_format,
         )
 
+        # Build return dict before cleanup (temp_converted will be deleted)
+        result = {
+            "output_path": str(output_path),
+            "instrumental_path": str(instr_path),
+            "converted_vocals_path": str(temp_converted),
+        }
+
         # Cleanup temp files
         temp_vocals.unlink(missing_ok=True)
         temp_converted.unlink(missing_ok=True)
@@ -130,13 +139,10 @@ def swap_vocals(
         if progress_callback:
             progress_callback(1.0, "Done!")
 
-        return {
-            "output_path": str(output_path),
-            "instrumental_path": str(instr_path),
-            "converted_vocals_path": str(temp_converted) if temp_converted.exists() else None,
-        }
+        return result
 
     except Exception:
-        demucs.unload_model()
-        unregister_model("demucs")
+        if demucs_loaded:
+            demucs.unload_model()
+            unregister_model("demucs")
         raise

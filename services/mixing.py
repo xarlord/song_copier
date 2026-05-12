@@ -83,6 +83,9 @@ def mix_stems_with_volumes(
             max_length = stem.shape[-1]
 
     for name, stem in stems.items():
+        if stem.ndim == 1:
+            stem = stem[np.newaxis, :]
+
         vol = volumes.get(name, 1.0)
         if vol <= 0:
             continue  # muted stem

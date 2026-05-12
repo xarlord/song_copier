@@ -241,7 +241,7 @@ def create_tab() -> gr.Column:
             return 1.0, 0.0
 
         def _do_separate_stems(audio_path, progress=gr.Progress()):
-            """Separate audio into stems and store in state."""
+            """Separate audio into stems and store file paths in state."""
             if not audio_path:
                 return "⚠️ Please upload an audio file.", None
 
@@ -264,16 +264,15 @@ def create_tab() -> gr.Column:
                 stem_files = result["stem_files"]
                 stems_list = result["stems"]
 
-                # Load each stem into a dict of numpy arrays
-                stems_data = {}
+                # Store only file paths (JSON-serializable) instead of numpy arrays
+                stems_paths = {}
                 for name in stems_list:
                     fpath = stem_files.get(name)
                     if fpath:
-                        audio_arr, _ = load_audio(fpath)
-                        stems_data[name] = audio_arr
+                        stems_paths[name] = str(fpath)
 
                 msg = f"✅ Separated {len(stems_list)} stems: {', '.join(stems_list)}"
-                return msg, stems_data
+                return msg, stems_paths
 
             except Exception as e:
                 import logging
@@ -281,7 +280,7 @@ def create_tab() -> gr.Column:
                 return f"❌ Error: {e}", None
 
         def _do_process_stems(
-            stems_data,
+            stems_paths,
             v_stretch, v_pitch,
             d_stretch, d_pitch,
             b_stretch, b_pitch,
@@ -291,10 +290,17 @@ def create_tab() -> gr.Column:
             progress=gr.Progress(),
         ):
             """Process all stems with per-stem settings and remix."""
-            if not stems_data:
+            if not stems_paths:
                 return "⚠️ No stems loaded. Upload and separate first.", None, *[None] * 6
 
             try:
+                # Reload stems from saved file paths
+                stems_data = {}
+                for name, fpath in stems_paths.items():
+                    audio_arr, loaded_sr = load_audio(fpath)
+                    stems_data[name] = audio_arr
+                    sample_rate = loaded_sr
+
                 slider_values = {
                     "vocals": (v_stretch, v_pitch),
                     "drums": (d_stretch, d_pitch),
@@ -308,9 +314,6 @@ def create_tab() -> gr.Column:
                 settings = {}
                 for name, (stretch, pitch) in slider_values.items():
                     settings[name] = {"stretch": stretch, "pitch": pitch}
-
-                # Determine SR from any loaded stem
-                sample_rate = 44100  # default
 
                 progress(0.1, desc="Processing stems...")
 

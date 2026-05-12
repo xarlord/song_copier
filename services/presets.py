@@ -7,7 +7,7 @@ import yaml
 
 logger = logging.getLogger(__name__)
 
-PRESETS_DIR = Path("config/presets")
+PRESETS_DIR = Path(__file__).resolve().parent.parent / "config" / "presets"
 
 
 def _ensure_presets_dir() -> Path:
@@ -101,7 +101,10 @@ def delete_preset(name: str) -> bool:
     if not data.get("custom", True):
         logger.warning(f"Cannot delete built-in preset: {name}")
         return False
-    path = PRESETS_DIR / f"{name}.yaml"
+    safe_name = "".join(c for c in name if c.isalnum() or c in " -_").strip()
+    if not safe_name:
+        safe_name = "custom_preset"
+    path = PRESETS_DIR / f"{safe_name}.yaml"
     path.unlink(missing_ok=True)
     logger.info(f"Deleted preset: {name}")
     return True

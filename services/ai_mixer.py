@@ -308,7 +308,12 @@ def apply_suggested_mix(
             # 2. EQ
             eq = sugg["suggested_eq"]
             if any(v != 0.0 for v in eq.values()):
-                stem = apply_eq(stem.astype(np.float32), sr, **eq).astype(np.float64)
+                stem = apply_eq(
+                    stem.astype(np.float32), sr,
+                    low_gain=eq["low"],
+                    mid_gain=eq["mid"],
+                    high_gain=eq["high"],
+                ).astype(np.float64)
 
             # 3. Reverb
             rev = sugg["suggested_reverb"]
