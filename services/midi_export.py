@@ -118,7 +118,7 @@ def audio_to_midi(
     instrument: str = "auto",
     min_note_duration: float = 0.05,
     pitch_data: tuple[np.ndarray, np.ndarray] | None = None,
-) -> 'mido.MidiFile':
+) -> 'MidiFile':
     """Convert audio to MIDI using fundamental frequency detection.
 
     Detects pitch over time and quantizes into discrete MIDI note events.

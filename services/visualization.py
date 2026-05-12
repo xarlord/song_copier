@@ -17,7 +17,7 @@ _SPECTRUM_COLOR = "#7b68ee"
 _LABEL_COLOR = "white"
 
 
-def _fig_to_numpy(fig: "matplotlib.figure.Figure") -> np.ndarray:
+def _fig_to_numpy(fig) -> np.ndarray:
     """Convert a matplotlib Figure to an RGB numpy array (H, W, 3)."""
     fig.canvas.draw()
     buf = fig.canvas.buffer_rgba()  # (H, W, 4)
