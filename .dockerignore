@@ -1,0 +1,56 @@
+# =============================================================================
+# Audio Generator Studio — Docker Ignore
+# =============================================================================
+
+# Python virtual environments
+venv/
+rvc_env/
+.venv/
+env/
+
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Git
+.git/
+.gitignore
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Project cache and output (mounted as volumes instead)
+cache/
+output/
+temp/
+
+# Claude / MCP
+.claude/
+.mcp.json
+
+# Project artifacts
+projects/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker files (avoid recursive context)
+docker-compose*.yml
+Dockerfile
+.dockerignore
+
+# Documentation
+*.md
+LICENSE
+
+# Misc
+*.log
+*.egg-info/
+dist/
+build/

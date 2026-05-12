@@ -22,6 +22,11 @@ from ui.tabs.batch_tab import create_tab as create_batch_tab
 from ui.tabs.mastering_tab import create_tab as create_mastering_tab
 from ui.tabs.visualization_tab import create_tab as create_visualization_tab
 from ui.tabs.recording_tab import create_tab as create_recording_tab
+from ui.tabs.project_library_tab import create_tab as create_project_library_tab
+from ui.tabs.midi_export_tab import create_tab as create_midi_export_tab
+from ui.tabs.time_stretch_tab import create_tab as create_time_stretch_tab
+from ui.tabs.ai_mixer_tab import create_tab as create_ai_mixer_tab
+from ui.tabs.plugins_tab import create_tab as create_plugins_tab
 
 
 CUSTOM_THEME = gr.themes.Soft(
@@ -71,10 +76,20 @@ def create_app() -> gr.Blocks:
                 create_voice_swap_tab()
             with gr.Tab("Song Spin-off"):
                 create_spinoff_tab()
+            with gr.Tab("⏱️ Stretch & Pitch"):
+                create_time_stretch_tab()
             with gr.Tab("🎛️ Mastering"):
                 create_mastering_tab()
+            with gr.Tab("🤖 AI Mix"):
+                create_ai_mixer_tab()
             with gr.Tab("📊 Visualize"):
                 create_visualization_tab()
+            with gr.Tab("🎼 MIDI Export"):
+                create_midi_export_tab()
+            with gr.Tab("📂 Library"):
+                create_project_library_tab()
+            with gr.Tab("🔌 Plugins"):
+                create_plugins_tab()
             with gr.Tab("Batch Process"):
                 create_batch_tab()
 

@@ -1,0 +1,36 @@
+# =============================================================================
+# Audio Generator Studio — GPU Deployment Override
+# Use: docker compose -f docker-compose.yml -f docker-compose.gpu.yml up
+#
+# This override adds specific GPU device selection, memory limits, and
+# production-tuned settings for cloud GPU providers (RunPod, Vast.ai, etc.)
+# =============================================================================
+
+services:
+  audio-studio:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            # Select specific GPU by device index (0 = first GPU)
+            # Change to 1, 2, etc. for multi-GPU systems
+            - driver: nvidia
+              device_ids: ["0"]
+              capabilities: [gpu]
+        limits:
+          # Cap container memory at 24GB (adjust to your GPU VRAM)
+          memory: 24g
+    environment:
+      - DEVICE=auto
+      - LOG_LEVEL=INFO
+      - GRADIO_SHARE=true
+      # Pin CUDA device (useful for multi-GPU nodes)
+      - NVIDIA_VISIBLE_DEVICES=0
+      - CUDA_VISIBLE_DEVICES=0
+      # PyTorch settings for optimal GPU performance
+      - TORCH_CUDA_ARCH_LIST=8.0;8.6;8.9
+      - CUDA_MODULE_LOADING=LAZY
+    # Increase shared memory for large model inference
+    shm_size: "8gb"
+    # Production restart policy
+    restart: on-failure:5

@@ -1,0 +1,84 @@
+# =============================================================================
+# Audio Generator Studio — Docker Compose (GPU + CPU services)
+# =============================================================================
+
+services:
+  # ---- GPU-accelerated service (primary) ------------------------------------
+  audio-studio:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: audio-generator-studio:latest
+    container_name: audio-studio-gpu
+    restart: unless-stopped
+    ports:
+      - "7860:7860"
+    volumes:
+      # Persist model cache across restarts (avoids re-downloading ~5GB+)
+      - ./cache:/app/cache
+      # Persist generated output files
+      - ./output:/app/output
+      # Temp files (optional — can be ephemeral)
+      - ./temp:/app/temp
+      # Config overrides (mount a local config if needed)
+      - ./config:/app/config
+    environment:
+      # Device override — 'auto' detects GPU, set 'cpu' as fallback
+      - DEVICE=auto
+      # Log level: DEBUG, INFO, WARNING, ERROR
+      - LOG_LEVEL=INFO
+      # Gradio settings
+      - GRADIO_SERVER_NAME=0.0.0.0
+      - GRADIO_SERVER_PORT=7860
+      # Enable Gradio public share link (for quick testing)
+      - GRADIO_SHARE=false
+      # Model cache directories
+      - TRANSFORMERS_CACHE=/app/cache/huggingface
+      - TORCH_HOME=/app/cache/torch
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860/"]
+      interval: 30s
+      timeout: 10s
+      start_period: 120s
+      retries: 3
+    shm_size: "4gb"
+
+  # ---- CPU-only service (for testing / development) -------------------------
+  audio-studio-cpu:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: audio-generator-studio:latest
+    container_name: audio-studio-cpu
+    restart: unless-stopped
+    profiles:
+      - cpu
+    ports:
+      - "7861:7860"
+    volumes:
+      - ./cache:/app/cache
+      - ./output:/app/output
+      - ./temp:/app/temp
+      - ./config:/app/config
+    environment:
+      - DEVICE=cpu
+      - LOG_LEVEL=DEBUG
+      - GRADIO_SERVER_NAME=0.0.0.0
+      - GRADIO_SERVER_PORT=7860
+      - GRADIO_SHARE=false
+      - TRANSFORMERS_CACHE=/app/cache/huggingface
+      - TORCH_HOME=/app/cache/torch
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860/"]
+      interval: 30s
+      timeout: 10s
+      start_period: 120s
+      retries: 3
+    shm_size: "2gb"
