@@ -15,6 +15,11 @@ from utils.gpu import get_device, get_vram_info
 from services.cleanup import run_startup_cleanup
 from config import load_config
 from ui.styles import CUSTOM_CSS
+from ui.components import (
+    create_audio_player_footer,
+    create_keyboard_shortcuts,
+    create_toast_placeholder,
+)
 from ui.tabs.instrumental_tab import create_tab as create_instrumental_tab
 from ui.tabs.voice_swap_tab import create_tab as create_voice_swap_tab
 from ui.tabs.spinoff_tab import create_tab as create_spinoff_tab
@@ -27,6 +32,7 @@ from ui.tabs.midi_export_tab import create_tab as create_midi_export_tab
 from ui.tabs.time_stretch_tab import create_tab as create_time_stretch_tab
 from ui.tabs.ai_mixer_tab import create_tab as create_ai_mixer_tab
 from ui.tabs.plugins_tab import create_tab as create_plugins_tab
+from ui.tabs.tab_transcription_tab import create_tab as create_tab_transcription_tab
 
 
 CUSTOM_THEME = gr.themes.Soft(
@@ -56,6 +62,10 @@ def create_app() -> gr.Blocks:
     vram = get_vram_info()
 
     with gr.Blocks(title="Audio Generator Studio", theme=CUSTOM_THEME, css=CUSTOM_CSS) as app:
+        # Global UI enhancements
+        create_toast_placeholder()
+        create_keyboard_shortcuts()
+
         with gr.Column(elem_classes=["app-header"]):
             gr.Markdown(
                 "# Audio Generator Studio\n"
@@ -88,10 +98,15 @@ def create_app() -> gr.Blocks:
                 create_midi_export_tab()
             with gr.Tab("📂 Library"):
                 create_project_library_tab()
+            with gr.Tab("🎸 Tab"):
+                create_tab_transcription_tab()
             with gr.Tab("🔌 Plugins"):
                 create_plugins_tab()
             with gr.Tab("Batch Process"):
                 create_batch_tab()
+
+        # Global audio player footer (fixed at bottom of viewport)
+        create_audio_player_footer()
 
     return app
 

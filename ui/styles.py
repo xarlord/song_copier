@@ -173,6 +173,261 @@ input[type="range"] {
     border-color: rgba(83, 52, 131, 0.7) !important;
 }
 
+/* === Tab number badges (keyboard shortcut indicators) === */
+.tab-nav button { position: relative; }
+.tab-nav button::after {
+    content: attr(data-tab-idx);
+    display: none; /* toggled via JS below */
+}
+.tab-badge {
+    position: absolute;
+    top: 2px;
+    right: 4px;
+    font-size: 0.65rem !important;
+    background: rgba(83, 52, 131, 0.45);
+    color: rgba(255,255,255,0.5);
+    border-radius: 4px;
+    padding: 1px 4px;
+    line-height: 1;
+    pointer-events: none;
+}
+
+/* === Global Audio Player Footer === */
+.ag-audio-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    background: linear-gradient(180deg, #12122a 0%, #0a0a1e 100%);
+    border-top: 1px solid rgba(83, 52, 131, 0.35);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 24px;
+    height: 56px;
+    box-sizing: border-box;
+    backdrop-filter: blur(12px);
+}
+.ag-footer-track-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 140px;
+    max-width: 220px;
+}
+.ag-footer-track-name {
+    color: #d0d0f0;
+    font-size: 0.85rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.ag-footer-track-time {
+    color: #6a6a8a;
+    font-size: 0.72rem;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+.ag-footer-controls {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+.ag-footer-btn {
+    background: rgba(83, 52, 131, 0.25);
+    border: 1px solid rgba(83, 52, 131, 0.35);
+    color: #c8c8e8;
+    border-radius: 50%;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.15s ease;
+    padding: 0;
+    line-height: 1;
+}
+.ag-footer-btn:hover {
+    background: rgba(83, 52, 131, 0.5);
+    color: #fff;
+}
+.ag-footer-btn-play {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+    background: linear-gradient(135deg, #533483, #0f3460);
+    border: none;
+    box-shadow: 0 2px 8px rgba(83, 52, 131, 0.35);
+}
+.ag-footer-btn-play:hover {
+    box-shadow: 0 4px 14px rgba(83, 52, 131, 0.55);
+    transform: scale(1.05);
+}
+.ag-footer-progress-wrap {
+    flex: 1;
+    min-width: 80px;
+}
+.ag-footer-progress-bar {
+    height: 6px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 3px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+.ag-footer-progress-bar:hover {
+    height: 10px;
+}
+.ag-footer-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #533483, #7b5ea7);
+    border-radius: 3px;
+    transition: width 0.1s linear;
+}
+.ag-footer-volume-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 110px;
+}
+.ag-footer-volume-icon {
+    font-size: 1rem;
+    cursor: default;
+}
+.ag-footer-volume-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 80px;
+    height: 4px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+    outline: none;
+}
+.ag-footer-volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #7b5ea7;
+    cursor: pointer;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+.ag-footer-volume-slider::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #7b5ea7;
+    cursor: pointer;
+    border: none;
+}
+
+/* Play-in-footer button added to Gradio audio players */
+.ag-play-in-footer {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: rgba(83, 52, 131, 0.6);
+    border: none;
+    border-radius: 6px;
+    padding: 2px 6px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: 10;
+}
+.ag-play-in-footer:hover {
+    background: rgba(83, 52, 131, 0.9);
+}
+audio:hover ~ .ag-play-in-footer,
+.ag-play-in-footer:hover {
+    opacity: 1;
+}
+
+/* Add bottom padding to the main container so content isn't hidden behind the footer */
+.gradio-container {
+    padding-bottom: 70px !important;
+}
+
+/* === Better Scrollbar === */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: rgba(10, 10, 26, 0.5);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(83, 52, 131, 0.4);
+    border-radius: 4px;
+    transition: background 0.2s ease;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(83, 52, 131, 0.65);
+}
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(83, 52, 131, 0.4) rgba(10, 10, 26, 0.5);
+}
+
+/* === Loading Spinner Animation === */
+@keyframes ag-spin {
+    to { transform: rotate(360deg); }
+}
+.ag-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(83, 52, 131, 0.2);
+    border-top-color: #7b5ea7;
+    border-radius: 50%;
+    animation: ag-spin 0.7s linear infinite;
+    vertical-align: middle;
+}
+button:disabled {
+    position: relative;
+}
+button:disabled::after {
+    content: '';
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    margin-top: -8px;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,0.15);
+    border-top-color: rgba(255,255,255,0.6);
+    border-radius: 50%;
+    animation: ag-spin 0.7s linear infinite;
+}
+
+/* === Toast Notification === */
+.ag-toast {
+    position: fixed;
+    bottom: 70px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: linear-gradient(135deg, #533483, #0f3460);
+    color: #fff;
+    padding: 10px 24px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.4);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 10000;
+    white-space: nowrap;
+}
+.ag-toast-visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
 /* === Responsive === */
 @media (max-width: 768px) {
     .app-header {
@@ -185,5 +440,22 @@ input[type="range"] {
     .section-card {
         padding: 14px 16px !important;
     }
+    .ag-audio-footer {
+        padding: 8px 12px;
+        gap: 8px;
+        height: 50px;
+    }
+    .ag-footer-track-info {
+        min-width: 80px;
+        max-width: 120px;
+    }
+    .ag-footer-track-name { font-size: 0.75rem; }
+    .ag-footer-volume-wrap { display: none; }
+    .tab-nav { overflow-x: auto !important; flex-wrap: nowrap !important; }
+    .tab-nav button { flex-shrink: 0; font-size: 0.82rem !important; padding: 8px 12px !important; }
+}
+@media (max-width: 480px) {
+    .ag-footer-track-info { display: none; }
+    .ag-footer-progress-wrap { min-width: 50px; }
 }
 """

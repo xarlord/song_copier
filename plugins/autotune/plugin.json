@@ -1,0 +1,12 @@
+{
+  "name": "autotune",
+  "version": "1.0.0",
+  "description": "Pitch correction / autotune effect",
+  "author": "Audio Generator Studio",
+  "parameters": [
+    {"name": "key", "type": "choice", "choices": ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"], "default": "C", "label": "Target Key"},
+    {"name": "scale", "type": "choice", "choices": ["chromatic","major","minor","pentatonic","blues"], "default": "chromatic", "label": "Scale"},
+    {"name": "speed", "type": "float", "min": 0.0, "max": 1.0, "step": 0.01, "default": 0.8, "label": "Correction Speed (0=subtle, 1=T-Pain)"},
+    {"name": "formant_shift", "type": "float", "min": -12.0, "max": 12.0, "step": 0.1, "default": 0.0, "label": "Formant Shift (semitones)"}
+  ]
+}

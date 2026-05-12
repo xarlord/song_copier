@@ -1,0 +1,13 @@
+{
+  "name": "harmonizer",
+  "version": "1.0.0",
+  "description": "Add vocal harmonies at configurable intervals",
+  "author": "Audio Generator Studio",
+  "parameters": [
+    {"name": "interval_1", "type": "choice", "choices": ["none","-12","-7","-5","-4","-3","3","4","5","7","12"], "default": "3", "label": "Harmony 1 Interval (semitones)"},
+    {"name": "interval_2", "type": "choice", "choices": ["none","-12","-7","-5","-4","-3","3","4","5","7","12"], "default": "7", "label": "Harmony 2 Interval (semitones)"},
+    {"name": "gain_1", "type": "float", "min": 0.0, "max": 1.0, "step": 0.01, "default": 0.7, "label": "Harmony 1 Volume"},
+    {"name": "gain_2", "type": "float", "min": 0.0, "max": 1.0, "step": 0.01, "default": 0.5, "label": "Harmony 2 Volume"},
+    {"name": "mix", "type": "float", "min": 0.0, "max": 1.0, "step": 0.01, "default": 0.5, "label": "Dry/Wet Mix"}
+  ]
+}
