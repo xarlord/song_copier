@@ -1,5 +1,7 @@
 """Audio visualization — waveform, spectrogram, spectrum, and comparison plots."""
 
+from __future__ import annotations
+
 import logging
 
 import numpy as np

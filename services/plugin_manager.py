@@ -57,7 +57,6 @@ def discover_plugins(plugin_dir: str = "plugins") -> list[dict]:
 
     Returns a list of manifest dicts (one per discovered plugin).
     """
-    global _plugin_cache
     _plugin_cache.clear()
 
     base = _plugin_base_dir(plugin_dir)
