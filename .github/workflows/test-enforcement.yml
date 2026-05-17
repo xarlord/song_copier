@@ -1,0 +1,117 @@
+name: Test Enforcement Gate
+
+on:
+  pull_request:
+    branches: [master, main]
+  push:
+    branches: [master, main]
+
+jobs:
+  test-presence-check:
+    name: "🧪 Tests Required for Changes"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch base branch
+        run: git fetch origin ${{ github.base_ref }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Check test presence for changed files
+        run: |
+          python scripts/test-enforcement/check-test-presence.py \
+            --base ${{ github.base_ref }} \
+            --project audio_generator \
+            --verbose
+
+  test-with-coverage:
+    name: "📊 Tests + Coverage Gate"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-cov pyyaml numpy scipy matplotlib
+
+      - name: Run tests with coverage
+        run: |
+          pytest tests/ --cov=services --cov=models --cov=pipelines --cov=utils \
+            --cov-report=json:coverage.json \
+            --cov-report=term-missing \
+            -v
+
+      - name: Check coverage meets minimum
+        run: |
+          python scripts/test-enforcement/coverage-diff-check.py \
+            --coverage-file coverage.json \
+            --format pytest \
+            --min-coverage 60
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: coverage.json
+          retention-days: 7
+
+  # Keep existing lint + import checks
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 pyyaml
+
+      - name: Syntax check all Python files
+        run: |
+          python -c "
+          import py_compile, os, sys
+          errors = []
+          for root, dirs, files in os.walk('.'):
+              skip = ['venv', 'rvc_env', '__pycache__', '.git', 'node_modules', '.claude']
+              dirs[:] = [d for d in dirs if d not in skip]
+              for f in files:
+                  if f.endswith('.py'):
+                      path = os.path.join(root, f)
+                      try:
+                          py_compile.compile(path, doraise=True)
+                      except py_compile.PyCompileError as e:
+                          errors.append(str(e))
+                          print(f'FAIL: {path}')
+          if errors:
+              for e in errors:
+                  print(e)
+              sys.exit(1)
+          print('All Python files pass syntax check.')
+          "
+
+      - name: Flake8 critical errors
+        run: |
+          flake8 . \
+            --exclude=venv,rvc_env,__pycache__,.git,.claude \
+            --select=E9,F63,F7,F82 \
+            --show-source \
+            --statistics
