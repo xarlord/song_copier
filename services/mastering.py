@@ -328,6 +328,7 @@ def apply_stereo_widen(audio: np.ndarray, width: float = 1.5) -> np.ndarray:
     # Clamp to prevent clipping from width > 1
     peak = np.max(np.abs(result))
     if peak > 1.0:
+        # Scale down proportionally, leaving a small headroom
         result = result / peak * 0.95
 
     return result.astype(np.float32)

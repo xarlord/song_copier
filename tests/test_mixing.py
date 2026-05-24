@@ -33,7 +33,7 @@ class TestMixStems:
 
     def test_mix_with_exclude(self, sample_stems):
         """Excluded stems should not be in the mix."""
-        result = mix_stems(sample_stems, exclude=["drums"])
+        result = mix_stems(sample_stems, exclude=["drums"], normalize=False)
         manual = sample_stems["vocals"] + sample_stems["bass"] + sample_stems["other"]
         np.testing.assert_allclose(result, manual, atol=1e-5)
 
